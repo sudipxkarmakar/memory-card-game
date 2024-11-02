@@ -1,22 +1,32 @@
-const cardValues = ['1', '2', '3', '4', '5', '6', '7', '8'];
-let cardDeck = [...cardValues, ...cardValues];
+const gameBoard = document.getElementById('game-board');
+const timerDisplay = document.getElementById('timer');
+const scoreDisplay = document.getElementById('score');
+const restartButton = document.getElementById('restartButton');
+
+const flipSound = document.getElementById('flipSound');
+const win = document.getElementById('win');
+const finalWin = document.getElementById('finalWin');
+const loseSound = document.getElementById('loseSound');
+
+let cardValues = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F'];
+let cardDeck = [...cardValues];
 let flippedCards = [];
 let matchedCards = [];
 let score = 0;
 let timeRemaining = 60;
 let timerInterval;
 
-const gameBoard = document.getElementById('gameBoard');
-const scoreDisplay = document.getElementById('score');
-const timerDisplay = document.getElementById('timer');
-const restartButton = document.getElementById('restartButton');
-const flipSound = document.getElementById('flipSound');
-const winSound = document.getElementById('winSound');
-const loseSound = document.getElementById('loseSound');
+// Shuffle the deck and create cards
+function shuffleDeck(deck) {
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+}
 
-// Create card elements
 function createCards() {
-    cardDeck.sort(() => 0.5 - Math.random());
+    shuffleDeck(cardDeck);
+    gameBoard.innerHTML = '';
     cardDeck.forEach(value => {
         const card = document.createElement('div');
         card.classList.add('card');
@@ -26,21 +36,25 @@ function createCards() {
     });
 }
 
-// Flip card function
-function flipCard() {
-    if (flippedCards.length < 2 && !this.classList.contains('flipped') && !this.classList.contains('matched')) {
-        flipSound.currentTime = 0; // Reset audio to the start
-        flipSound.play(); // Play flip sound
-        this.classList.add('flipped');
-        this.innerText = this.dataset.value;
-        flippedCards.push(this);
-        if (flippedCards.length === 2) {
-            setTimeout(checkMatch, 1000);
-        }
+function flipCard(event) {
+    const card = event.target;
+
+    if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length === 2) {
+        return;
+    }
+
+    flipSound.currentTime = 0;
+    flipSound.play();
+
+    card.classList.add('flipped');
+    card.innerText = card.dataset.value;
+    flippedCards.push(card);
+
+    if (flippedCards.length === 2) {
+        checkMatch();
     }
 }
 
-// Check for match
 function checkMatch() {
     const [firstCard, secondCard] = flippedCards;
     if (firstCard.dataset.value === secondCard.dataset.value) {
@@ -48,56 +62,72 @@ function checkMatch() {
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
         flippedCards = [];
-        score++;
-        updateScore(); // Update score on match
+
+        // Play the match sound for each matched pair
+        win.currentTime = 0;
+        win.play();
+
         if (matchedCards.length === cardDeck.length) {
-            winSound.currentTime = 0; // Reset audio to the start
-            winSound.play(); // Play win sound
-            alert('You win!');
+            clearInterval(timerInterval); // Stop the timer
+            setTimeout(() => {
+                finalWin.currentTime = 0;
+                finalWin.play();
+            }, 300);
+
+            setTimeout(() => {
+                alert('Congratulations! You win!');
+                restartGame();
+            }, 800);
         }
     } else {
-        firstCard.classList.remove('flipped');
-        secondCard.classList.remove('flipped');
-        firstCard.innerText = '';
-        secondCard.innerText = '';
-        flippedCards = [];
+        score++;
+        updateScore();
+        setTimeout(() => {
+            firstCard.classList.remove('flipped');
+            secondCard.classList.remove('flipped');
+            firstCard.innerText = '';
+            secondCard.innerText = '';
+            flippedCards = [];
+        }, 1000);
     }
 }
 
-// Update score display function
 function updateScore() {
     scoreDisplay.innerText = `Score: ${score}`;
 }
 
-// Start the timer
 function startTimer() {
+    timerDisplay.innerText = `Time: ${timeRemaining}`;
     timerInterval = setInterval(() => {
         timeRemaining--;
         timerDisplay.innerText = `Time: ${timeRemaining}`;
         if (timeRemaining <= 0) {
             clearInterval(timerInterval);
-            loseSound.currentTime = 0; // Reset audio to the start
-            loseSound.play(); // Play losing sound
-            alert('Time is up! Game Over!');
-            restartGame();
+            loseSound.currentTime = 0;
+            loseSound.play();
+            setTimeout(() => {
+                alert('Time is up! Game Over!');
+                restartGame();
+            }, 300);
         }
     }, 1000);
 }
 
-// Restart the game
 function restartGame() {
     gameBoard.innerHTML = '';
-    cardDeck = [...cardValues, ...cardValues];
+    cardDeck = [...cardValues];
     matchedCards = [];
-    score = 0; // Reset score
-    timeRemaining = 60; // Reset timer
-    clearInterval(timerInterval); // Clear previous timer
-    updateScore(); // Update score display
+    flippedCards = [];
+    score = 0;
+    timeRemaining = 60;
+    clearInterval(timerInterval);
+    updateScore();
+    startTimer();
     createCards();
-    startTimer(); // Start new timer
 }
 
-// Initialize the game
 restartButton.addEventListener('click', restartGame);
+
+// Initialize the game
 createCards();
 startTimer();

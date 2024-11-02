@@ -1,35 +1,36 @@
+/* Basic styles */
 body {
     font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.game-board {
+#game-board {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    width: 300px;
     margin: 20px;
 }
 
 .card {
-    width: 100px;
-    height: 100px;
-    margin: 10px;
-    background-color: #3498db;
+    width: 70px;
+    height: 70px;
+    margin: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #2980b9;
     font-size: 24px;
     color: white;
     cursor: pointer;
-    transition: transform 0.3s;
+    user-select: none;
 }
 
-.card.flipped {
-    transform: rotateY(180deg);
+.card.flipped, .card.matched {
+    background-color: #2ecc71; /* Green color for flipped/matched cards */
 }
 
-.card.matched {
-    background-color: #2ecc71; /* Green color for matched cards */
-    cursor: default; /* Prevent further clicking */
+.matched {
+    cursor: default;
 }

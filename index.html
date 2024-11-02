@@ -8,13 +8,17 @@
 </head>
 <body>
     <h1>Memory Card Game</h1>
-    <p id="score">Score: 0</p>
+    <div id="game-board"></div>
     <p id="timer">Time: 60</p>
-    <div id="gameBoard"></div>
-    <button id="restartButton">Restart Game</button>
+    <p id="score">Score: 0</p>
+    <button id="restartButton">Restart</button>
+
+    <!-- Sound Effects -->
     <audio id="flipSound" src="flip.mp3"></audio>
-    <audio id="winSound" src="win.mp3"></audio>
+    <audio id="win" src="win.mp3"></audio>
+    <audio id="finalWin" src="finalWin.mp3"></audio>
     <audio id="loseSound" src="lose.mp3"></audio>
+
     <script src="script.js"></script>
 </body>
 </html>
