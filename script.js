@@ -1,75 +1,59 @@
-const cardValues = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+const cardValues = ['1', '2', '3', '4', '5', '6', '7', '8'];
 let cardDeck = [...cardValues, ...cardValues];
-let matchedCards = [];
 let flippedCards = [];
+let matchedCards = [];
 let score = 0;
 let timeRemaining = 60;
 let timerInterval;
-const gameBoard = document.getElementById('game-board');
-const restartButton = document.getElementById('restart');
-const flipSound = new Audio('flip.mp3'); // Load flip sound
-const winSound = new Audio('win.mp3'); // Load win sound
 
-// Shuffle cards function
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
+const gameBoard = document.getElementById('gameBoard');
+const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
+const restartButton = document.getElementById('restartButton');
+const flipSound = document.getElementById('flipSound');
+const winSound = document.getElementById('winSound');
+const loseSound = document.getElementById('loseSound');
 
-// Create cards on the board
+// Create card elements
 function createCards() {
-    shuffle(cardDeck);
+    cardDeck.sort(() => 0.5 - Math.random());
     cardDeck.forEach(value => {
         const card = document.createElement('div');
         card.classList.add('card');
         card.dataset.value = value;
-        card.addEventListener('click', () => flipCard(card));
+        card.addEventListener('click', flipCard);
         gameBoard.appendChild(card);
     });
 }
 
-let isFlipping = false; // Flag to control card flipping
-
 // Flip card function
-function flipCard(card) {
-    if (!isFlipping && flippedCards.length < 2 && !matchedCards.includes(card)) {
-        isFlipping = true; // Set the flag to prevent rapid flipping
-        card.classList.add('flipped');
-        card.innerText = card.dataset.value;
-
-        // Play flip sound
+function flipCard() {
+    if (flippedCards.length < 2 && !this.classList.contains('flipped') && !this.classList.contains('matched')) {
         flipSound.currentTime = 0; // Reset audio to the start
-        flipSound.play();
-
-        flippedCards.push(card);
-
+        flipSound.play(); // Play flip sound
+        this.classList.add('flipped');
+        this.innerText = this.dataset.value;
+        flippedCards.push(this);
         if (flippedCards.length === 2) {
             setTimeout(checkMatch, 1000);
         }
-
-        // Reset the flag after a delay to allow time for the sound to play
-        setTimeout(() => {
-            isFlipping = false;
-        }, 1000); // Match this duration with the card flip delay
     }
 }
 
-
-// Check for match function
+// Check for match
 function checkMatch() {
     const [firstCard, secondCard] = flippedCards;
     if (firstCard.dataset.value === secondCard.dataset.value) {
         matchedCards.push(firstCard, secondCard);
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
-        winSound.play(); // Play win sound
         flippedCards = [];
+        score++;
         updateScore(); // Update score on match
         if (matchedCards.length === cardDeck.length) {
+            winSound.currentTime = 0; // Reset audio to the start
+            winSound.play(); // Play win sound
             alert('You win!');
-            clearInterval(timerInterval);
         }
     } else {
         firstCard.classList.remove('flipped');
@@ -77,30 +61,30 @@ function checkMatch() {
         firstCard.innerText = '';
         secondCard.innerText = '';
         flippedCards = [];
-        score++; // Increment score for each attempt
-        updateScore(); // Update score
     }
 }
 
 // Update score display function
 function updateScore() {
-    document.getElementById('score').innerText = `Score: ${score}`;
+    scoreDisplay.innerText = `Score: ${score}`;
 }
 
 // Start the timer
 function startTimer() {
     timerInterval = setInterval(() => {
         timeRemaining--;
-        document.getElementById('timer').innerText = `Time: ${timeRemaining}`;
+        timerDisplay.innerText = `Time: ${timeRemaining}`;
         if (timeRemaining <= 0) {
             clearInterval(timerInterval);
+            loseSound.currentTime = 0; // Reset audio to the start
+            loseSound.play(); // Play losing sound
             alert('Time is up! Game Over!');
             restartGame();
         }
     }, 1000);
 }
 
-// Restart the game function
+// Restart the game
 function restartGame() {
     gameBoard.innerHTML = '';
     cardDeck = [...cardValues, ...cardValues];
