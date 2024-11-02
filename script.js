@@ -1,76 +1,91 @@
-const gameBoard = document.getElementById('gameBoard');
-const restartButton = document.getElementById('restartButton');
-
-let cardValues = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-let cardDeck = [...cardValues, ...cardValues]; // Duplicate values for pairs
-let flippedCards = [];
+const cardValues = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+let cardDeck = [...cardValues, ...cardValues];
 let matchedCards = [];
+let flippedCards = [];
+let score = 0;
+let timeRemaining = 60;
+let timerInterval;
+const gameBoard = document.getElementById('game-board');
+const restartButton = document.getElementById('restart');
+const flipSound = new Audio('flip.mp3'); // Load flip sound
+const winSound = new Audio('win.mp3'); // Load win sound
 
-// Shuffle the cards
+// Shuffle cards function
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
-    return array;
 }
 
-// Create card elements
+// Create cards on the board
 function createCards() {
-    shuffle(cardDeck).forEach(value => {
+    shuffle(cardDeck);
+    cardDeck.forEach(value => {
         const card = document.createElement('div');
         card.classList.add('card');
         card.dataset.value = value;
-        card.addEventListener('click', flipCard);
+        card.addEventListener('click', () => flipCard(card));
         gameBoard.appendChild(card);
     });
 }
 
-// Handle card flip
-function flipCard() {
-    if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
-        this.classList.add('flipped');
-        this.innerText = this.dataset.value;
-        flippedCards.push(this);
+let isFlipping = false; // Flag to control card flipping
+
+// Flip card function
+function flipCard(card) {
+    if (!isFlipping && flippedCards.length < 2 && !matchedCards.includes(card)) {
+        isFlipping = true; // Set the flag to prevent rapid flipping
+        card.classList.add('flipped');
+        card.innerText = card.dataset.value;
+
+        // Play flip sound
+        flipSound.currentTime = 0; // Reset audio to the start
+        flipSound.play();
+
+        flippedCards.push(card);
 
         if (flippedCards.length === 2) {
             setTimeout(checkMatch, 1000);
         }
+
+        // Reset the flag after a delay to allow time for the sound to play
+        setTimeout(() => {
+            isFlipping = false;
+        }, 1000); // Match this duration with the card flip delay
     }
 }
 
-let score = 0;
 
-// Update score display function
-function updateScore() {
-    document.getElementById('score').innerText = `Score: ${score}`;
-}
-
-// Check for match
+// Check for match function
 function checkMatch() {
     const [firstCard, secondCard] = flippedCards;
     if (firstCard.dataset.value === secondCard.dataset.value) {
         matchedCards.push(firstCard, secondCard);
         firstCard.classList.add('matched');
         secondCard.classList.add('matched');
+        winSound.play(); // Play win sound
         flippedCards = [];
         updateScore(); // Update score on match
         if (matchedCards.length === cardDeck.length) {
             alert('You win!');
+            clearInterval(timerInterval);
         }
     } else {
-        score++; // Increment score for each attempt
         firstCard.classList.remove('flipped');
         secondCard.classList.remove('flipped');
         firstCard.innerText = '';
         secondCard.innerText = '';
         flippedCards = [];
+        score++; // Increment score for each attempt
         updateScore(); // Update score
     }
 }
 
-let timeRemaining = 60;
-let timerInterval;
+// Update score display function
+function updateScore() {
+    document.getElementById('score').innerText = `Score: ${score}`;
+}
 
 // Start the timer
 function startTimer() {
@@ -85,7 +100,7 @@ function startTimer() {
     }, 1000);
 }
 
-// Restart the game
+// Restart the game function
 function restartGame() {
     gameBoard.innerHTML = '';
     cardDeck = [...cardValues, ...cardValues];
@@ -98,9 +113,7 @@ function restartGame() {
     startTimer(); // Start new timer
 }
 
-// Modify the restart button event listener
+// Initialize the game
 restartButton.addEventListener('click', restartGame);
-
-// Start the game with the timer
 createCards();
 startTimer();
